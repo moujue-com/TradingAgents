@@ -5,49 +5,49 @@ from langchain_openai import ChatOpenAI
 
 
 class Reflector:
-    """Handles reflection on decisions and updating memory."""
+    """处理决策反思与记忆更新。"""
 
     def __init__(self, quick_thinking_llm: ChatOpenAI):
-        """Initialize the reflector with an LLM."""
+        """用 LLM 初始化反思器。"""
         self.quick_thinking_llm = quick_thinking_llm
         self.reflection_system_prompt = self._get_reflection_prompt()
 
     def _get_reflection_prompt(self) -> str:
-        """Get the system prompt for reflection."""
+        """获取反思用的系统提示词。"""
         return """
-You are an expert financial analyst tasked with reviewing trading decisions/analysis and providing a comprehensive, step-by-step analysis. 
-Your goal is to deliver detailed insights into investment decisions and highlight opportunities for improvement, adhering strictly to the following guidelines:
+你是一名专家级金融分析师，负责回顾交易决策/分析并给出全面、分步骤的分析。
+你的目标是对投资决策提供详细见解，突出改进机会，严格遵循以下准则：
 
-1. Reasoning:
-   - For each trading decision, determine whether it was correct or incorrect. A correct decision results in an increase in returns, while an incorrect decision does the opposite.
-   - Analyze the contributing factors to each success or mistake. Consider:
-     - Market intelligence.
-     - Technical indicators.
-     - Technical signals.
-     - Price movement analysis.
-     - Overall market data analysis 
-     - News analysis.
-     - Social media and sentiment analysis.
-     - Fundamental data analysis.
-     - Weight the importance of each factor in the decision-making process.
+1. 推理：
+   - 对每个交易决策，判断其正确与否。正确的决策带来收益增长，错误的则相反。
+   - 分析每次成功或失误的影响因素，包括：
+     - 市场情报。
+     - 技术指标。
+     - 技术信号。
+     - 价格走势分析。
+     - 整体市场数据分析。
+     - 新闻分析。
+     - 社交媒体与情绪分析。
+     - 基本面数据分析。
+     - 权衡各因素在决策中的重要性。
 
-2. Improvement:
-   - For any incorrect decisions, propose revisions to maximize returns.
-   - Provide a detailed list of corrective actions or improvements, including specific recommendations (e.g., changing a decision from HOLD to BUY on a particular date).
+2. 改进：
+   - 对错误决策，提出修正建议以最大化收益。
+   - 给出详细的改进措施清单，包括具体建议（如将某日决策从 HOLD 改为 BUY）。
 
-3. Summary:
-   - Summarize the lessons learned from the successes and mistakes.
-   - Highlight how these lessons can be adapted for future trading scenarios and draw connections between similar situations to apply the knowledge gained.
+3. 总结：
+   - 总结成功与失误的经验教训。
+   - 强调这些经验如何应用于未来交易场景，并联系类似情形以迁移知识。
 
-4. Query:
-   - Extract key insights from the summary into a concise sentence of no more than 1000 tokens.
-   - Ensure the condensed sentence captures the essence of the lessons and reasoning for easy reference.
+4. 摘要：
+   - 从总结中提炼关键信息，形成不超过 1000 tokens 的简明句子。
+   - 确保该句子高度凝练经验与推理，便于快速参考。
 
-Adhere strictly to these instructions, and ensure your output is detailed, accurate, and actionable. You will also be given objective descriptions of the market from a price movements, technical indicator, news, and sentiment perspective to provide more context for your analysis.
+严格遵循上述要求，确保输出详细、准确、可操作。你还会获得市场价格、技术指标、新闻、情绪等客观描述以辅助分析。
 """
 
     def _extract_current_situation(self, current_state: Dict[str, Any]) -> str:
-        """Extract the current market situation from the state."""
+        """从状态中提取当前市场情形。"""
         curr_market_report = current_state["market_report"]
         curr_sentiment_report = current_state["sentiment_report"]
         curr_news_report = current_state["news_report"]
@@ -58,7 +58,7 @@ Adhere strictly to these instructions, and ensure your output is detailed, accur
     def _reflect_on_component(
         self, component_type: str, report: str, situation: str, returns_losses
     ) -> str:
-        """Generate reflection for a component."""
+        """为某一组件生成反思。"""
         messages = [
             ("system", self.reflection_system_prompt),
             (
@@ -71,7 +71,7 @@ Adhere strictly to these instructions, and ensure your output is detailed, accur
         return result
 
     def reflect_bull_researcher(self, current_state, returns_losses, bull_memory):
-        """Reflect on bull researcher's analysis and update memory."""
+        """反思多头研究员分析并更新记忆。"""
         situation = self._extract_current_situation(current_state)
         bull_debate_history = current_state["investment_debate_state"]["bull_history"]
 
@@ -81,7 +81,7 @@ Adhere strictly to these instructions, and ensure your output is detailed, accur
         bull_memory.add_situations([(situation, result)])
 
     def reflect_bear_researcher(self, current_state, returns_losses, bear_memory):
-        """Reflect on bear researcher's analysis and update memory."""
+        """反思空头研究员分析并更新记忆。"""
         situation = self._extract_current_situation(current_state)
         bear_debate_history = current_state["investment_debate_state"]["bear_history"]
 
@@ -91,7 +91,7 @@ Adhere strictly to these instructions, and ensure your output is detailed, accur
         bear_memory.add_situations([(situation, result)])
 
     def reflect_trader(self, current_state, returns_losses, trader_memory):
-        """Reflect on trader's decision and update memory."""
+        """反思交易员决策并更新记忆。"""
         situation = self._extract_current_situation(current_state)
         trader_decision = current_state["trader_investment_plan"]
 
@@ -101,7 +101,7 @@ Adhere strictly to these instructions, and ensure your output is detailed, accur
         trader_memory.add_situations([(situation, result)])
 
     def reflect_invest_judge(self, current_state, returns_losses, invest_judge_memory):
-        """Reflect on investment judge's decision and update memory."""
+        """反思投资评审决策并更新记忆。"""
         situation = self._extract_current_situation(current_state)
         judge_decision = current_state["investment_debate_state"]["judge_decision"]
 
@@ -111,7 +111,7 @@ Adhere strictly to these instructions, and ensure your output is detailed, accur
         invest_judge_memory.add_situations([(situation, result)])
 
     def reflect_risk_manager(self, current_state, returns_losses, risk_manager_memory):
-        """Reflect on risk manager's decision and update memory."""
+        """反思风险管理决策并更新记忆。"""
         situation = self._extract_current_situation(current_state)
         judge_decision = current_state["risk_debate_state"]["judge_decision"]
 

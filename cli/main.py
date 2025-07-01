@@ -30,11 +30,12 @@ console = Console()
 app = typer.Typer(
     name="TradingAgents",
     help="TradingAgents CLI: Multi-Agents LLM Financial Trading Framework",
-    add_completion=True,  # Enable shell completion
+    add_completion=True,  # 启用 shell 补全
 )
 
 
 # Create a deque to store recent messages with a maximum length
+# 创建一个双端队列用于存储最近的消息，设置最大长度
 class MessageBuffer:
     def __init__(self, max_length=100):
         self.messages = deque(maxlen=max_length)
@@ -43,21 +44,26 @@ class MessageBuffer:
         self.final_report = None  # Store the complete final report
         self.agent_status = {
             # Analyst Team
+            # 分析师团队
             "Market Analyst": "pending",
             "Social Analyst": "pending",
             "News Analyst": "pending",
             "Fundamentals Analyst": "pending",
             # Research Team
+            # 研究团队
             "Bull Researcher": "pending",
             "Bear Researcher": "pending",
             "Research Manager": "pending",
             # Trading Team
+            # 交易团队
             "Trader": "pending",
             # Risk Management Team
+            # 风险管理团队
             "Risky Analyst": "pending",
             "Neutral Analyst": "pending",
             "Safe Analyst": "pending",
             # Portfolio Management Team
+            # 投资组合管理团队
             "Portfolio Manager": "pending",
         }
         self.current_agent = None
@@ -91,10 +97,12 @@ class MessageBuffer:
 
     def _update_current_report(self):
         # For the panel display, only show the most recently updated section
+        # 面板显示时，仅展示最近更新的部分
         latest_section = None
         latest_content = None
 
         # Find the most recently updated section
+        # 查找最近更新的部分
         for section, content in self.report_sections.items():
             if content is not None:
                 latest_section = section
@@ -102,26 +110,29 @@ class MessageBuffer:
                
         if latest_section and latest_content:
             # Format the current section for display
+            # 格式化当前部分以便显示
             section_titles = {
-                "market_report": "Market Analysis",
-                "sentiment_report": "Social Sentiment",
-                "news_report": "News Analysis",
-                "fundamentals_report": "Fundamentals Analysis",
-                "investment_plan": "Research Team Decision",
-                "trader_investment_plan": "Trading Team Plan",
-                "final_trade_decision": "Portfolio Management Decision",
+                "market_report": "Market Analysis",  # 市场分析
+                "sentiment_report": "Social Sentiment",  # 社交情绪
+                "news_report": "News Analysis",  # 新闻分析
+                "fundamentals_report": "Fundamentals Analysis",  # 基本面分析
+                "investment_plan": "Research Team Decision",  # 研究团队决策
+                "trader_investment_plan": "Trading Team Plan",  # 交易团队计划
+                "final_trade_decision": "Portfolio Management Decision",  # 投资组合管理决策
             }
             self.current_report = (
                 f"### {section_titles[latest_section]}\n{latest_content}"
             )
 
         # Update the final complete report
+        # 更新最终完整报告
         self._update_final_report()
 
     def _update_final_report(self):
         report_parts = []
 
         # Analyst Team Reports
+        # 分析师团队报告
         if any(
             self.report_sections[section]
             for section in [
@@ -150,16 +161,19 @@ class MessageBuffer:
                 )
 
         # Research Team Reports
+        # 研究团队报告
         if self.report_sections["investment_plan"]:
             report_parts.append("## Research Team Decision")
             report_parts.append(f"{self.report_sections['investment_plan']}")
 
         # Trading Team Reports
+        # 交易团队报告
         if self.report_sections["trader_investment_plan"]:
             report_parts.append("## Trading Team Plan")
             report_parts.append(f"{self.report_sections['trader_investment_plan']}")
 
         # Portfolio Management Decision
+        # 投资组合管理决策
         if self.report_sections["final_trade_decision"]:
             report_parts.append("## Portfolio Management Decision")
             report_parts.append(f"{self.report_sections['final_trade_decision']}")

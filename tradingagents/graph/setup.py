@@ -13,7 +13,7 @@ from .conditional_logic import ConditionalLogic
 
 
 class GraphSetup:
-    """Handles the setup and configuration of the agent graph."""
+    """处理智能体图的搭建与配置。"""
 
     def __init__(
         self,
@@ -28,7 +28,7 @@ class GraphSetup:
         risk_manager_memory,
         conditional_logic: ConditionalLogic,
     ):
-        """Initialize with required components."""
+        """用所需组件初始化。"""
         self.quick_thinking_llm = quick_thinking_llm
         self.deep_thinking_llm = deep_thinking_llm
         self.toolkit = toolkit
@@ -43,19 +43,20 @@ class GraphSetup:
     def setup_graph(
         self, selected_analysts=["market", "social", "news", "fundamentals"]
     ):
-        """Set up and compile the agent workflow graph.
+        """搭建并编译智能体工作流图。
 
-        Args:
-            selected_analysts (list): List of analyst types to include. Options are:
-                - "market": Market analyst
-                - "social": Social media analyst
-                - "news": News analyst
-                - "fundamentals": Fundamentals analyst
+        参数：
+            selected_analysts (list): 要包含的分析师类型列表。可选项：
+                - "market": 市场分析师
+                - "social": 社交媒体分析师
+                - "news": 新闻分析师
+                - "fundamentals": 基本面分析师
         """
         if len(selected_analysts) == 0:
             raise ValueError("Trading Agents Graph Setup Error: no analysts selected!")
 
         # Create analyst nodes
+        # 创建分析师节点
         analyst_nodes = {}
         delete_nodes = {}
         tool_nodes = {}
@@ -89,6 +90,7 @@ class GraphSetup:
             tool_nodes["fundamentals"] = self.tool_nodes["fundamentals"]
 
         # Create researcher and manager nodes
+        # 创建研究员和管理者节点
         bull_researcher_node = create_bull_researcher(
             self.quick_thinking_llm, self.bull_memory
         )
@@ -101,6 +103,7 @@ class GraphSetup:
         trader_node = create_trader(self.quick_thinking_llm, self.trader_memory)
 
         # Create risk analysis nodes
+        # 创建风险分析节点
         risky_analyst = create_risky_debator(self.quick_thinking_llm)
         neutral_analyst = create_neutral_debator(self.quick_thinking_llm)
         safe_analyst = create_safe_debator(self.quick_thinking_llm)
@@ -109,9 +112,11 @@ class GraphSetup:
         )
 
         # Create workflow
+        # 创建工作流
         workflow = StateGraph(AgentState)
 
         # Add analyst nodes to the graph
+        # 将分析师节点添加到图中
         for analyst_type, node in analyst_nodes.items():
             workflow.add_node(f"{analyst_type.capitalize()} Analyst", node)
             workflow.add_node(
@@ -120,6 +125,7 @@ class GraphSetup:
             workflow.add_node(f"tools_{analyst_type}", tool_nodes[analyst_type])
 
         # Add other nodes
+        # 添加其他节点
         workflow.add_node("Bull Researcher", bull_researcher_node)
         workflow.add_node("Bear Researcher", bear_researcher_node)
         workflow.add_node("Research Manager", research_manager_node)
@@ -130,17 +136,21 @@ class GraphSetup:
         workflow.add_node("Risk Judge", risk_manager_node)
 
         # Define edges
+        # 定义边
         # Start with the first analyst
+        # 从第一个分析师开始
         first_analyst = selected_analysts[0]
         workflow.add_edge(START, f"{first_analyst.capitalize()} Analyst")
 
         # Connect analysts in sequence
+        # 顺序连接分析师
         for i, analyst_type in enumerate(selected_analysts):
             current_analyst = f"{analyst_type.capitalize()} Analyst"
             current_tools = f"tools_{analyst_type}"
             current_clear = f"Msg Clear {analyst_type.capitalize()}"
 
             # Add conditional edges for current analyst
+            # 为当前分析师添加条件边
             workflow.add_conditional_edges(
                 current_analyst,
                 getattr(self.conditional_logic, f"should_continue_{analyst_type}"),
@@ -149,6 +159,7 @@ class GraphSetup:
             workflow.add_edge(current_tools, current_analyst)
 
             # Connect to next analyst or to Bull Researcher if this is the last analyst
+            # 连接到下一个分析师，或如果是最后一个则连接到 Bull Researcher
             if i < len(selected_analysts) - 1:
                 next_analyst = f"{selected_analysts[i+1].capitalize()} Analyst"
                 workflow.add_edge(current_clear, next_analyst)
@@ -156,6 +167,7 @@ class GraphSetup:
                 workflow.add_edge(current_clear, "Bull Researcher")
 
         # Add remaining edges
+        # 添加剩余边
         workflow.add_conditional_edges(
             "Bull Researcher",
             self.conditional_logic.should_continue_debate,
