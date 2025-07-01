@@ -34,14 +34,13 @@ app = typer.Typer(
 )
 
 
-# Create a deque to store recent messages with a maximum length
 # 创建一个双端队列用于存储最近的消息，设置最大长度
 class MessageBuffer:
     def __init__(self, max_length=100):
         self.messages = deque(maxlen=max_length)
         self.tool_calls = deque(maxlen=max_length)
         self.current_report = None
-        self.final_report = None  # Store the complete final report
+        self.final_report = None  # 存储完整的最终报告
         self.agent_status = {
             # Analyst Team
             # 分析师团队
